@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
 class DistributionRef(BaseModel):
@@ -14,11 +14,13 @@ class DatasetRef(BaseModel):
     portal: Optional[str] = None
     landing_page: Optional[str] = None
     license: Optional[str] = None
-    keywords: List[str] = Field(default_factory=list)
+    keywords: List[str] = []
     modified: Optional[str] = None
     accrual_periodicity: Optional[str] = None
-    distributions: List[DistributionRef] = Field(default_factory=list)
- 
+    publisher: Optional[str] = None         # NEW
+    contact: Optional[str] = None           # NEW
+    distributions: List[DistributionRef] = []
+
 class BucketScores(BaseModel):
     metadata: float
     access: float
@@ -28,13 +30,13 @@ class BucketScores(BaseModel):
     compliance: float
 
 class DebtEvidence(BaseModel):
-    missing_fields: List[str] = Field(default_factory=list)
-    access_notes: List[str] = Field(default_factory=list)
-    quality_summary: Dict[str, Any] = Field(default_factory=dict)
+    missing_fields: List[str] = []
+    access_notes: List[str] = []
+    quality_summary: Dict[str, Any] = {}
     timeliness_days: Optional[int] = None
     discoverability_found: bool = False
-    compliance_notes: List[str] = Field(default_factory=list)
- 
+    compliance_notes: List[str] = []
+
 class DatasetScore(BaseModel):
     dataset: DatasetRef
     score: float
