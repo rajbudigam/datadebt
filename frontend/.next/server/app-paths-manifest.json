@@ -1,4 +1,6 @@
 {
   "/scan/page": "app/scan/page.js",
-  "/leaderboard/page": "app/leaderboard/page.js"
+  "/leaderboard/page": "app/leaderboard/page.js",
+  "/dataset/[id]/page": "app/dataset/[id]/page.js",
+  "/page": "app/page.js"
 }

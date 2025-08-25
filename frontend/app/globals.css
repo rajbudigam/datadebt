@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Legacy styles for backward compatibility */
 .code {
   @apply bg-slate-900/60 border border-slate-800 rounded-xl p-4 font-mono text-sm;
 }
@@ -9,5 +10,208 @@
   @apply bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 shadow-glow;
 }
 .btn {
-  @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 bg-brand-600 text-slate-900 font-semibold hover:brightness-110;
+  @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 bg-brand-600 text-slate-900 font-semibold hover:brightness-110 transition-all duration-200;
+}
+
+/* Premium Design System */
+.glass-card {
+  @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl;
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.premium-input {
+  @apply w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-slate-100 placeholder-slate-400 
+         focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 
+         transition-all duration-200 backdrop-blur-sm;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.premium-input:focus {
+  @apply bg-slate-900/70;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(110, 231, 242, 0.5),
+    0 0 20px rgba(110, 231, 242, 0.2);
+}
+
+.premium-btn {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold 
+         transition-all duration-200 transform hover:scale-105 active:scale-95 
+         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900;
+}
+
+.premium-btn.primary {
+  @apply bg-gradient-to-r from-brand-600 to-blue-600 text-slate-900 
+         hover:from-brand-500 hover:to-blue-500 focus:ring-brand-500/50;
+  box-shadow: 
+    0 4px 14px 0 rgba(34, 211, 238, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.premium-btn.secondary {
+  @apply bg-slate-800/80 text-slate-200 border border-slate-700/50 
+         hover:bg-slate-700/80 hover:border-slate-600/50 focus:ring-slate-500/50;
+  box-shadow: 
+    0 2px 8px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.premium-btn:disabled {
+  @apply opacity-60 cursor-not-allowed transform-none hover:scale-100;
+}
+
+/* Text utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Enhanced gradients */
+.gradient-text {
+  @apply bg-gradient-to-r from-brand-500 to-blue-400 bg-clip-text text-transparent;
+}
+
+/* Loading animations */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: shimmer 2s infinite;
+}
+
+/* Aurora Background Effects */
+@keyframes aurora-drift-1 {
+  0%, 100% { 
+    transform: translate(-5%, -10%) scale(1);
+  }
+  33% { 
+    transform: translate(10%, 5%) scale(1.1);
+  }
+  66% { 
+    transform: translate(-3%, 8%) scale(0.95);
+  }
+}
+
+@keyframes aurora-drift-2 {
+  0%, 100% { 
+    transform: translate(8%, 5%) scale(1.05);
+  }
+  50% { 
+    transform: translate(-12%, -8%) scale(0.9);
+  }
+}
+
+@keyframes data-stream-flow {
+  0% { 
+    background-position: -200% 200%, -150% 150%, -250% 250%, -180% 180%, -220% 220%;
+  }
+  100% { 
+    background-position: 200% -200%, 150% -150%, 250% -250%, 180% -180%, 220% -220%;
+  }
+}
+
+.aurora-gradient-1 {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(ellipse 800px 600px at 50% 0%, 
+    rgba(110, 231, 242, 0.15) 0%, 
+    rgba(34, 211, 238, 0.08) 35%, 
+    transparent 70%);
+  animation: aurora-drift-1 45s ease-in-out infinite;
+  will-change: transform;
+}
+
+.aurora-gradient-2 {
+  position: absolute;
+  width: 110%;
+  height: 110%;
+  top: -5%;
+  right: -5%;
+  background: radial-gradient(ellipse 600px 800px at 80% 20%, 
+    rgba(147, 51, 234, 0.12) 0%, 
+    rgba(79, 70, 229, 0.06) 40%, 
+    transparent 70%);
+  animation: aurora-drift-2 60s ease-in-out infinite;
+  will-change: transform;
+}
+
+.aurora-noise {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 100px 100px;
+  opacity: 0.4;
+}
+
+.data-streams {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(25deg, transparent 47%, rgba(110, 231, 242, 0.03) 49%, rgba(110, 231, 242, 0.03) 51%, transparent 53%),
+    linear-gradient(35deg, transparent 47%, rgba(34, 211, 238, 0.02) 49%, rgba(34, 211, 238, 0.02) 51%, transparent 53%),
+    linear-gradient(45deg, transparent 47%, rgba(147, 51, 234, 0.025) 49%, rgba(147, 51, 234, 0.025) 51%, transparent 53%),
+    linear-gradient(55deg, transparent 47%, rgba(79, 70, 229, 0.02) 49%, rgba(79, 70, 229, 0.02) 51%, transparent 53%),
+    linear-gradient(65deg, transparent 47%, rgba(110, 231, 242, 0.015) 49%, rgba(110, 231, 242, 0.015) 51%, transparent 53%);
+  background-size: 150px 150px, 200px 200px, 180px 180px, 220px 220px, 160px 160px;
+  animation: data-stream-flow 18s linear infinite;
+  will-change: background-position;
+}
+
+.aurora-mask {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.1) 0%,
+    rgba(15, 23, 42, 0.2) 40%,
+    rgba(15, 23, 42, 0.4) 70%,
+    rgba(15, 23, 42, 0.6) 100%
+  );
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-gradient-1,
+  .aurora-gradient-2,
+  .data-streams {
+    animation: none !important;
+  }
+  
+  .aurora-gradient-1 {
+    transform: translate(-2%, -5%) scale(1);
+  }
+  
+  .aurora-gradient-2 {
+    transform: translate(4%, 2%) scale(1.02);
+  }
 }
