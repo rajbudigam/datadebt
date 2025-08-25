@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from typing import Optional, List
 from core.models import PortalScanResult, DatasetScore
 from core.discoverability import has_schema_org_dataset_jsonld
@@ -25,7 +25,15 @@ def _pick_profile_candidate(distributions) -> Optional[str]:
             best = r.get("url")
     return best
 
-@router.post("/ckan", response_model=PortalScanResult)
+@router.options("/ckan")
+async def ckan_options():
+    return Response(status_code=200, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
+
+@router.get("/ckan", response_model=PortalScanResult)
 async def scan_ckan(portal: str, query: Optional[str] = "", rows: int = 25):
     ds = fetch_ckan_datasets(portal, query, rows=rows)
     if not ds:
@@ -69,7 +77,7 @@ async def scan_ckan(portal: str, query: Optional[str] = "", rows: int = 25):
     avg = round(sum(x.score for x in results)/len(results), 2)
     return PortalScanResult(portal=portal, query=query, total=len(results), avg_score=avg, results=results)
 
-@router.post("/socrata", response_model=PortalScanResult)
+@router.get("/socrata", response_model=PortalScanResult)
 async def scan_socrata(domain: str, dataset_id: str, app_token: str = ""):
     d = fetch_socrata_dataset(domain, dataset_id, app_token or None)
     if not d:

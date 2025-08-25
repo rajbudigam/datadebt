@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { scanCKAN } from "@/lib/api";
+import { scanCKAN, badgeURL } from "@/lib/api";
 import { saveScan, loadScan, allHistory } from "@/lib/store";
 import Heatmap from "../components/Heatmap";
 import PercentileBadge from "../components/PercentileBadge";
@@ -95,7 +95,7 @@ const rankBase = useMemo<number[]>(() => rows.map((r: Row) => r.total), [rows]);
               <div className="text-slate-300">{scan.portal}</div>
               <div className="ml-auto text-sm">Datasets: <b>{scan.total}</b></div>
               <div className="text-sm">Avg Score: <b>{Math.round(scan.avg_score)}</b></div>
-              <img className="h-7" src={`${process.env.NEXT_PUBLIC_API_BASE_URL}/generate/badge?score=${scan.avg_score}`} />
+              <img className="h-7" src={badgeURL(scan.avg_score)} />
               <Link className="btn ml-4" href="/leaderboard">Open Leaderboard</Link>
             </div>
           </div>
@@ -118,10 +118,7 @@ const rankBase = useMemo<number[]>(() => rows.map((r: Row) => r.total), [rows]);
                       </a>
                       <div className="flex items-center gap-2">
                         <PercentileBadge all={rankBase as number[]} value={r.total} />
-                        <img
-                          className="h-6"
-                          src={`${process.env.NEXT_PUBLIC_API_BASE_URL}/generate/badge?score=${r.total}`}
-                        />
+                        <img className="h-6" src={badgeURL(r.total)} />
                       </div>
                     </li>
                   ))}

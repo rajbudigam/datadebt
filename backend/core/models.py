@@ -14,11 +14,13 @@ class DatasetRef(BaseModel):
     portal: Optional[str] = None
     landing_page: Optional[str] = None
     license: Optional[str] = None
+    publisher: Optional[str] = None
+    contact: Optional[str] = None
     keywords: List[str] = Field(default_factory=list)
     modified: Optional[str] = None
     accrual_periodicity: Optional[str] = None
     distributions: List[DistributionRef] = Field(default_factory=list)
- 
+
 class BucketScores(BaseModel):
     metadata: float
     access: float
@@ -34,7 +36,7 @@ class DebtEvidence(BaseModel):
     timeliness_days: Optional[int] = None
     discoverability_found: bool = False
     compliance_notes: List[str] = Field(default_factory=list)
- 
+
 class DatasetScore(BaseModel):
     dataset: DatasetRef
     score: float
@@ -46,4 +48,5 @@ class PortalScanResult(BaseModel):
     query: Optional[str] = None
     total: int
     avg_score: float
+    results: List[DatasetScore]
     results: List[DatasetScore]

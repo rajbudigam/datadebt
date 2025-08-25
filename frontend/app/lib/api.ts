@@ -1,13 +1,16 @@
-const base = process.env.NEXT_PUBLIC_API_BASE_URL!;
+// Prefer env var; fall back to local dev API so scans work without extra setup
+const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
 export async function scanCKAN(portal: string, query: string, rows=25) {
   const url = `${base}/scan/ckan?portal=${encodeURIComponent(portal)}&query=${encodeURIComponent(query)}&rows=${rows}`;
   console.log('Making request to:', url);
+  console.log('API base URL:', base);
   
   try {
     const res = await fetch(url, { 
-      method: "POST",
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       }
     });
     console.log('Response status:', res.status);
@@ -24,6 +27,17 @@ export async function scanCKAN(portal: string, query: string, rows=25) {
     return data;
   } catch (error) {
     console.error('Fetch error:', error);
+    
+    // Type guard for Error objects
+    if (error instanceof Error) {
+      console.error('Error type:', error.constructor.name);
+      console.error('Error message:', error.message);
+      
+      // If it's a network error, provide more helpful message
+      if (error.message === 'Load failed' || error.message.includes('fetch')) {
+        throw new Error(`Cannot connect to backend at ${base}. Make sure the backend server is running on port 8000.`);
+      }
+    }
     throw error;
   }
 }
@@ -32,7 +46,7 @@ export async function scanSocrata(domain: string, id: string, token?: string) {
   url.searchParams.set("domain", domain);
   url.searchParams.set("dataset_id", id);
   if (token) url.searchParams.set("app_token", token);
-  const res = await fetch(url.toString(), { method: "POST" });
+  const res = await fetch(url.toString(), { method: "GET" });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
