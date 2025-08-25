@@ -34,6 +34,8 @@ def fetch_ckan_datasets(base_url: str, query: str, rows: int = 50) -> List[Datas
                 keywords=pkg.get("tags") and [t.get("name") for t in pkg["tags"]] or [],
                 modified=pkg.get("metadata_modified"),
                 accrual_periodicity=(pkg.get("frequency") or pkg.get("update_frequency") or None),
+                publisher=pkg.get("organization", {}).get("title") if pkg.get("organization") else pkg.get("author"),
+                contact=pkg.get("maintainer") or pkg.get("author") or pkg.get("contact_point"),
                 distributions=dists
             ))
     return datasets

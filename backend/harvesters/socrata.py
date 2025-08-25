@@ -30,5 +30,7 @@ def fetch_socrata_dataset(domain: str, four_by_four: str, app_token: Optional[st
         keywords=m.get("tags") or [],
         modified=str(updated_at) if updated_at else None,
         accrual_periodicity=None,
+        publisher=m.get("owner", {}).get("displayName") if m.get("owner") else None,
+        contact=m.get("owner", {}).get("email") if m.get("owner") else None,
         distributions=dist
     )

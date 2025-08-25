@@ -1,6 +1,5 @@
 from typing import Dict, Any, Tuple
 from .dcat_checks import check_metadata_presence
-from .discoverability import has_schema_org_dataset_jsonld
 from .utils import clamp, days_since
 
 DEFAULT_WEIGHTS = {
@@ -12,53 +11,58 @@ DEFAULT_WEIGHTS = {
     "compliance": 0.10
 }
 
+_PERIOD_TARGET = {
+    "daily": 2, "weekly": 10, "monthly": 45, "quarterly": 130,
+    "annual": 500, "yearly": 500
+}
+
 def score_dataset(meta: Dict[str, Any], fp: Dict[str, Any]) -> Tuple[float, Dict[str, float], Dict[str, Any]]:
     # --- Metadata completeness (DCAT/DCAT-AP presence) ---
     missing_required, missing_recommended = check_metadata_presence(meta)
-    req_total = 6  # from REQUIRED_FIELDS
+    req_total = 6
     req_present = req_total - len(missing_required)
-    metadata_score = clamp(100.0 * req_present / req_total - 5.0 * len(missing_recommended), 0, 100)
+    # lighter penalty for recommended; presence ratio drives most of it
+    metadata_score = clamp(100.0 * req_present / req_total - 3.0 * len(missing_recommended), 0, 100)
 
-    # --- Access friction (API/bulk/login) ---
+    # --- Access friction ---
     access_penalty = 0
     notes = []
     if not meta.get("api_available"):
-        access_penalty += 30; notes.append("No API endpoint detected")
+        access_penalty += 25; notes.append("No API endpoint detected")
     if not meta.get("bulk_available"):
-        access_penalty += 20; notes.append("No bulk download")
+        access_penalty += 15; notes.append("No bulk download")
     if meta.get("login_required"):
         access_penalty += 30; notes.append("Login/CAPTCHA barrier for read")
     access_score = clamp(100 - access_penalty, 0, 100)
 
-    # --- Quality & integrity (Frictionless errors) ---
+    # --- Quality & integrity ---
+    # If profiler didn't run but dataset is clearly machine-readable, we assign a surrogate score
     errors = fp.get("errors", 0)
-    # map error density to score: 0 errors→100, many errors→0
-    quality_score = clamp(100 - min(100, errors * 2), 0, 100)
+    # Map errors to score (gentler slope)
+    quality_score = clamp(100 - min(100, errors * 1.0), 0, 100)
 
-    # --- Timeliness (DWBP emphasis on freshness; DCAT modified) ---
+    # --- Timeliness (fair baseline with periodicity awareness) ---
     days = days_since(meta.get("modified"))
     if days is None:
-        timeliness_score = 40  # unknown freshness
+        timeliness_score = 55  # unknown freshness, not a total fail
     else:
-        timeliness_score = clamp(100 - (days * 0.5), 0, 100)  # 2 days = -1 point
-        # penalty if declared update frequency violated (simple heuristic)
-        if meta.get("accrual_periodicity") in {"daily","weekly","monthly"} and days is not None:
-            target = {"daily": 2, "weekly": 10, "monthly": 40}[meta["accrual_periodicity"]]
-            if days > target:
-                timeliness_score = max(0, timeliness_score - 15)
+        period = (meta.get("accrual_periodicity") or "").lower()
+        target = _PERIOD_TARGET.get(period, 730)  # default 2 years
+        # 0 days -> 100; at target days -> ~0
+        timeliness_score = clamp(100 - (100 * (days / target)), 0, 100)
 
-    # --- Discoverability (schema.org/Dataset JSON-LD present?) ---
-    discoverability_score = 100 if meta.get("jsonld_present") else 40
+    # --- Discoverability ---
+    # Most portals lack JSON-LD; don't make it a death blow.
+    discoverability_score = 85 if meta.get("jsonld_present") else 35
 
-    # --- Compliance & interoperability (license clarity + DCAT-AP hints) ---
-    compliance_score = 70
+    # --- Compliance & interoperability (license clarity + API/bulk hints) ---
+    compliance_score = 60
     comp_notes = []
     lic = (meta.get("license") or "").lower()
     if not lic:
-        compliance_score -= 30; comp_notes.append("Missing license")
-    elif any(x in lic for x in ["cc0","cc-by","odc","mit","gpl","spdx:"]):
-        compliance_score += 10
-    # DCAT-AP + HVD simple hint: API & bulk raise compliance perception
+        compliance_score -= 25; comp_notes.append("Missing license")
+    elif any(x in lic for x in ["cc0","cc-by","odc","mit","apache","gpl","spdx:"]):
+        compliance_score += 15
     if meta.get("api_available"): compliance_score += 5
     if meta.get("bulk_available"): compliance_score += 5
     compliance_score = clamp(compliance_score, 0, 100)
@@ -71,7 +75,6 @@ def score_dataset(meta: Dict[str, Any], fp: Dict[str, Any]) -> Tuple[float, Dict
         "discoverability": discoverability_score,
         "compliance": compliance_score
     }
-    # weighted score
     total = sum(buckets[k] * DEFAULT_WEIGHTS[k] for k in buckets)
     evidence = {
         "missing_fields": missing_required + missing_recommended,

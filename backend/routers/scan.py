@@ -9,6 +9,22 @@ from harvesters.socrata import fetch_socrata_dataset
 
 router = APIRouter()
 
+_MACHINE_READABLE_EXTS = (
+    ".csv",".tsv",".txt",".json",".geojson",".xlsx",".xls",".parquet"
+)
+_BULK_HINTS = (".zip",".7z",".tar",".tgz",".gz",".bz2",".gpkg",".shp",".parquet")
+
+def _pick_profile_candidate(distributions) -> Optional[str]:
+    # Prefer CSV/TSV/TXT, then JSON/GeoJSON/XLSX, else None
+    best = None
+    for r in distributions or []:
+        url = (r.get("url") or "").lower()
+        if url.endswith((".csv",".tsv",".txt")):
+            return r.get("url")
+        if best is None and url.endswith((".json",".geojson",".xlsx",".xls",".parquet")):
+            best = r.get("url")
+    return best
+
 @router.post("/ckan", response_model=PortalScanResult)
 async def scan_ckan(portal: str, query: Optional[str] = "", rows: int = 25):
     ds = fetch_ckan_datasets(portal, query, rows=rows)
@@ -16,30 +32,34 @@ async def scan_ckan(portal: str, query: Optional[str] = "", rows: int = 25):
         raise HTTPException(404, "No datasets found")
     results: List[DatasetScore] = []
     for d in ds:
-        # signals for access friction
+        bulk_available = any(((x.url or "").lower().endswith(_BULK_HINTS)) for x in d.distributions)
+        api_available = True  # CKAN portal implies API endpoints for metadata/resources
+
         meta = {
             "title": d.title,
             "description": d.description,
-            "publisher": None, "contact": None,  # CKAN mapping left minimal
+            "publisher": d.publisher,
+            "contact": d.contact,
             "license": d.license,
             "distributions": [r.model_dump() for r in d.distributions],
             "keywords": d.keywords,
             "modified": d.modified,
             "accrual_periodicity": d.accrual_periodicity,
-            "api_available": True,  # CKAN portal implies API availability
-            "bulk_available": any((x.url or "").lower().endswith((".zip",".7z",".tar",".tgz")) for x in d.distributions),
+            "api_available": api_available,
+            "bulk_available": bulk_available,
             "login_required": False,
             "landing_page": d.landing_page,
         }
         meta["jsonld_present"] = has_schema_org_dataset_jsonld(d.landing_page) if d.landing_page else False
 
-        # simple quality profiling on first CSV-like resource
-        csv_like = None
-        for r in d.distributions:
-            url = (r.url or "").lower()
-            if url.endswith((".csv",".tsv",".txt")):
-                csv_like = r.url; break
-        fp = profile_resource(csv_like) if csv_like else {"errors": 200}  # penalize if no machine-readable CSV
+        # QUALITY: try to profile something machine-readable. If none, assign a surrogate instead of bombing to 0.
+        candidate = _pick_profile_candidate([r.model_dump() for r in d.distributions])
+        if candidate:
+            fp = profile_resource(candidate)
+        else:
+            # if we saw any machine-readable/ext hints (json, parquet, shapefile zip), give a gentle baseline
+            mr = any(((x.url or "").lower().endswith(_MACHINE_READABLE_EXTS + _BULK_HINTS)) for x in d.distributions)
+            fp = {"errors": 15 if mr else 200}
 
         total, buckets, evidence = score_dataset(meta, fp)
         results.append(DatasetScore(
@@ -64,7 +84,7 @@ async def scan_socrata(domain: str, dataset_id: str, app_token: str = ""):
         "modified": d.modified,
         "accrual_periodicity": None,
         "api_available": True,
-        "bulk_available": True,  # SODA + CSV
+        "bulk_available": True,
         "login_required": False,
         "landing_page": d.landing_page,
     }
