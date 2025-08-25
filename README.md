@@ -17,7 +17,7 @@ See sources: DCAT v3, DWBP, Google Dataset guidance, CKAN API, SODA, Frictionles
 # Terminal A
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 # Terminal B
 cd frontend

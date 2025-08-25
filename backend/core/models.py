@@ -14,10 +14,10 @@ class DatasetRef(BaseModel):
     portal: Optional[str] = None
     landing_page: Optional[str] = None
     license: Optional[str] = None
-    keywords: List[str] = []
+    keywords: List[str] = Field(default_factory=list)
     modified: Optional[str] = None
     accrual_periodicity: Optional[str] = None
-    distributions: List[DistributionRef] = []
+    distributions: List[DistributionRef] = Field(default_factory=list)
 
 class BucketScores(BaseModel):
     metadata: float
@@ -28,12 +28,12 @@ class BucketScores(BaseModel):
     compliance: float
 
 class DebtEvidence(BaseModel):
-    missing_fields: List[str] = []
-    access_notes: List[str] = []
-    quality_summary: Dict[str, Any] = {}
+    missing_fields: List[str] = Field(default_factory=list)
+    access_notes: List[str] = Field(default_factory=list)
+    quality_summary: Dict[str, Any] = Field(default_factory=dict)
     timeliness_days: Optional[int] = None
     discoverability_found: bool = False
-    compliance_notes: List[str] = []
+    compliance_notes: List[str] = Field(default_factory=list)
 
 class DatasetScore(BaseModel):
     dataset: DatasetRef
